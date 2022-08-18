@@ -42,11 +42,12 @@ public class Game {
         Board board = new Board();
         JFrame frame = new JFrame();
         Container c = frame.getContentPane();
-        Dimension d = new Dimension(squareSize*8,squareSize*8);
+        Dimension d = new Dimension(squareSize*8 + squareSize*4,squareSize*8);
         c.setPreferredSize(d);
         frame.setResizable(false);
         frame.pack();
         frame.setVisible(true);
+        frame.setBackground(new Color(229, 219, 214));
         drawBoard(piecesImages, closeButton, board, frame);
     }
 
@@ -187,8 +188,23 @@ public class Game {
                         }
                     }
                 }
+                if(stalemate || checkmate){
+                    //g.setColor(new Color(0, 0, 0));
+                    //g.drawRoundRect(2*squareSize,3*squareSize,4*squareSize,2*squareSize,50,50);
+                    g.setColor(new Color(234, 234, 234));
+                    g.fillRoundRect(2*squareSize,3*squareSize,4*squareSize,2*squareSize,50,50);
+                    g.setColor(new Color(0, 0, 0));
+                    g.setFont(new Font("TimesRoman", Font.PLAIN, 25));
+                    if(stalemate){
+                        g.drawString("Stalemate", 3*squareSize,4*squareSize);
+                    }
+                    else{
+                        g.drawString("Checkmate", 3*squareSize,4*squareSize);
+                    }
+                }
             }
         };
+
 
         resetTurn(board);
         frame.add(pn);
@@ -372,7 +388,7 @@ public class Game {
     private static Square getPiece(int x, int y, Board board){
         int xp = x/squareSize;
         int yp = 7-(y/squareSize);
-        if(board.getSquare(yp, xp).getPiece() == null)
+        if(!board.inBounds(yp, xp) || board.getSquare(yp, xp).getPiece() == null)
             return null;
         else{
             return board.getSquare(yp, xp);
@@ -393,11 +409,9 @@ public class Game {
     private static void determineResult(boolean check){
         if(!check){
             stalemate = true;
-            System.out.println("STALEMATE");
         }
         else{
             checkmate = true;
-            System.out.println("CHECKMATE");
         }
     }
 }
