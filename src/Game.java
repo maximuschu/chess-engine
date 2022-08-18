@@ -38,7 +38,7 @@ public class Game {
             System.out.println("Pieces images not found.");
         }
     }
-    public static void newGame(Image[] piecesImages, Image closeButton){
+    private static void newGame(Image[] piecesImages, Image closeButton){
         Board board = new Board();
         JFrame frame = new JFrame();
         Container c = frame.getContentPane();
@@ -50,12 +50,42 @@ public class Game {
         drawBoard(piecesImages, closeButton, board, frame);
     }
 
-    public static void resetBoard(Board board){
+    private static void resetBoard(Board board){
         currentColor = PieceColor.WHITE;
         board.initializeBoard();
+        currentSquare = null;
+        pawnPromotionMenu = false;
+        stalemate = false;
+        checkmate = false;
+        boolean check = board.isCheck(currentColor);
+        int totalMoves = board.generateValidMoves(currentColor);
     }
 
-    public static void drawBoard(Image[] piecesImages, Image closeButton, Board board, JFrame frame){
+    private static void nextTurn(Board board){
+        currentSquare.removePiece();
+        currentColor = currentColor.toggle();
+        boolean check = board.isCheck(currentColor);
+        System.out.println(check);
+        int totalMoves = board.generateValidMoves(currentColor);
+        System.out.println(totalMoves);
+        if(totalMoves == 0)
+            determineResult(check);
+        currentSquare = null;
+        pawnPromotionMenu = false;
+    }
+
+    private static void resetTurn(Board board){
+        boolean check = board.isCheck(currentColor);
+        System.out.println(check);
+        int totalMoves = board.generateValidMoves(currentColor);
+        System.out.println(totalMoves);
+        if(totalMoves == 0)
+            determineResult(check);
+        currentSquare = null;
+        pawnPromotionMenu = false;
+    }
+
+    private static void drawBoard(Image[] piecesImages, Image closeButton, Board board, JFrame frame){
         JPanel pn = new JPanel(){
             @Override
             public void paint(Graphics g) {
@@ -122,57 +152,51 @@ public class Game {
 
                 // Draw pawn promotion selection choices.
                 if(pawnPromotionMenu){
-                    if(currentSquare != null) {
-                        int pawnPromoteX = pawnPromotionY;
+                    if(currentSquare != null){
+                        int pawnPromote = pawnPromotionY;
                         // White promotion menu
-                        if (currentSquare.containsPiece() && currentSquare.getPiece().getPieceColor() == PieceColor.WHITE) {
+                        if(currentSquare.containsPiece() && currentSquare.getPiece().getPieceColor() == PieceColor.WHITE){
                             g.setColor(new Color(255, 255, 255));
-                            g.fillRect(pawnPromoteX * squareSize, 0, squareSize, squareSize); // Queen
-                            g.drawImage(piecesImages[1], pawnPromoteX * squareSize, 0, this);
-                            g.fillRect(pawnPromoteX * squareSize, squareSize, squareSize, squareSize); // Knight
-                            g.drawImage(piecesImages[3], pawnPromoteX * squareSize, squareSize, this);
-                            g.fillRect(pawnPromoteX * squareSize, 2 * squareSize, squareSize, squareSize); // Rook
-                            g.drawImage(piecesImages[4], pawnPromoteX * squareSize, 2 * squareSize, this);
-                            g.fillRect(pawnPromoteX * squareSize, 3 * squareSize, squareSize, squareSize); // Bishop
-                            g.drawImage(piecesImages[2], pawnPromoteX * squareSize, 3 * squareSize, this);
+                            g.fillRect(pawnPromote * squareSize, 0, squareSize, squareSize); // Queen
+                            g.drawImage(piecesImages[1], pawnPromote * squareSize, 0, this);
+                            g.fillRect(pawnPromote * squareSize, squareSize, squareSize, squareSize); // Knight
+                            g.drawImage(piecesImages[3], pawnPromote * squareSize, squareSize, this);
+                            g.fillRect(pawnPromote * squareSize, 2 * squareSize, squareSize, squareSize); // Rook
+                            g.drawImage(piecesImages[4], pawnPromote * squareSize, 2 * squareSize, this);
+                            g.fillRect(pawnPromote * squareSize, 3 * squareSize, squareSize, squareSize); // Bishop
+                            g.drawImage(piecesImages[2], pawnPromote * squareSize, 3 * squareSize, this);
                             g.setColor(new Color(239, 239, 239));
-                            g.fillRect(pawnPromoteX * squareSize, 4 * squareSize, squareSize, squareSize); // Cancel
-                            g.drawImage(closeButton, pawnPromoteX * squareSize, 4 * squareSize, this);
+                            g.fillRect(pawnPromote * squareSize, 4 * squareSize, squareSize, squareSize); // Cancel
+                            g.drawImage(closeButton, pawnPromote * squareSize, 4 * squareSize, this);
                         }
 
                         // Black promotion menu
-                        else if (currentSquare.containsPiece() && currentSquare.getPiece().getPieceColor() == PieceColor.BLACK) {
+                        else if(currentSquare.containsPiece() && currentSquare.getPiece().getPieceColor() == PieceColor.BLACK){
                             g.setColor(new Color(255, 255, 255));
-                            g.fillRect(pawnPromoteX * squareSize, 7 * squareSize, squareSize, squareSize); // Queen
-                            g.drawImage(piecesImages[7], pawnPromoteX * squareSize, 7 * squareSize, this);
-                            g.fillRect(pawnPromoteX * squareSize, 6 * squareSize, squareSize, squareSize); // Knight
-                            g.drawImage(piecesImages[9], pawnPromoteX * squareSize, 6 * squareSize, this);
-                            g.fillRect(pawnPromoteX * squareSize, 5 * squareSize, squareSize, squareSize); // Rook
-                            g.drawImage(piecesImages[10], pawnPromoteX * squareSize, 5 * squareSize, this);
-                            g.fillRect(pawnPromoteX * squareSize, 4 * squareSize, squareSize, squareSize); // Bishop
-                            g.drawImage(piecesImages[8], pawnPromoteX * squareSize, 4 * squareSize, this);
+                            g.fillRect(pawnPromote * squareSize, 7 * squareSize, squareSize, squareSize); // Queen
+                            g.drawImage(piecesImages[7], pawnPromote * squareSize, 7 * squareSize, this);
+                            g.fillRect(pawnPromote * squareSize, 6 * squareSize, squareSize, squareSize); // Knight
+                            g.drawImage(piecesImages[9], pawnPromote * squareSize, 6 * squareSize, this);
+                            g.fillRect(pawnPromote * squareSize, 5 * squareSize, squareSize, squareSize); // Rook
+                            g.drawImage(piecesImages[10], pawnPromote * squareSize, 5 * squareSize, this);
+                            g.fillRect(pawnPromote * squareSize, 4 * squareSize, squareSize, squareSize); // Bishop
+                            g.drawImage(piecesImages[8], pawnPromote * squareSize, 4 * squareSize, this);
                             g.setColor(new Color(239, 239, 239));
-                            g.fillRect(pawnPromoteX * squareSize, 3 * squareSize, squareSize, squareSize); // Cancel
-                            g.drawImage(closeButton, pawnPromoteX * squareSize, 3 * squareSize, this);
+                            g.fillRect(pawnPromote * squareSize, 3 * squareSize, squareSize, squareSize); // Cancel
+                            g.drawImage(closeButton, pawnPromote * squareSize, 3 * squareSize, this);
                         }
                     }
                 }
             }
         };
 
-        boolean check = board.isCheck(currentColor);
-        System.out.println(check);
-        int totalMoves = board.generateValidMoves(currentColor);
-        System.out.println(totalMoves);
-        if(totalMoves == 0)
-            determineResult(check);
-
+        resetTurn(board);
         frame.add(pn);
-        pn.addMouseMotionListener(new MouseMotionListener() {
+        pn.addMouseMotionListener(new MouseMotionListener(){
             @Override
-            public void mouseDragged(MouseEvent e) {
+            public void mouseDragged(MouseEvent e){
                 // Only allow dragging if not on pawn promotion menu.
-                if(!pawnPromotionMenu && currentSquare != null) {
+                if(!pawnPromotionMenu && currentSquare != null){
                     currentSquare.setXScreen(e.getY() - squareSize/2);
                     currentSquare.setYScreen(e.getX() - squareSize/2);
                     frame.repaint();
@@ -180,21 +204,20 @@ public class Game {
             }
 
             @Override
-            public void mouseMoved(MouseEvent e) {
+            public void mouseMoved(MouseEvent e){
                 // None
             }
         });
-        pn.addMouseListener(new MouseListener() {
+        pn.addMouseListener(new MouseListener(){
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e){
                 // Add click movement, if currentSquare null set as current piece if piece in selected coordinates,
                 // otherwise move piece if possible.
-                // resetBoard(board);
-                // System.out.println(board);
+                //resetBoard(board);
             }
 
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mousePressed(MouseEvent e){
                 // Set currently selected piece.
                 if(!pawnPromotionMenu){
                     currentSquare = getPiece(e.getX(), e.getY(), board);
@@ -205,131 +228,46 @@ public class Game {
                     Square selection = getSquare(e.getX(), e.getY(), board);
                     // White pawn promotion
                     if(currentSquare.getPiece().getPieceColor() == PieceColor.WHITE){
-                        if (selection.getX() == 7 && selection.getY() == pawnPromotionY) {
+                        if(selection.getX() == 7 && selection.getY() == pawnPromotionY){
                             board.getSquare(7, pawnPromotionY).setPiece(new Queen(PieceColor.WHITE));
-                            currentSquare.removePiece();
-                            currentColor = currentColor.toggle();
-                            boolean check = board.isCheck(currentColor);
-                            System.out.println(check);
-                            int totalMoves = board.generateValidMoves(currentColor);
-                            System.out.println(totalMoves);
-                            if(totalMoves == 0)
-                                determineResult(check);
-                            currentSquare = null;
-                            pawnPromotionMenu = false;
+                            nextTurn(board);
                         }
-                        else if (selection.getX() == 6 && selection.getY() == pawnPromotionY) {
+                        else if(selection.getX() == 6 && selection.getY() == pawnPromotionY){
                             board.getSquare(7, pawnPromotionY).setPiece(new Knight(PieceColor.WHITE));
-                            currentSquare.removePiece();
-                            boolean check = board.isCheck(currentColor);
-                            System.out.println(check);
-                            int totalMoves = board.generateValidMoves(currentColor);
-                            System.out.println(totalMoves);
-                            if(totalMoves == 0)
-                                determineResult(check);
-                            currentSquare = null;
-                            pawnPromotionMenu = false;
+                            nextTurn(board);
                         }
-                        else if (selection.getX() == 5 && selection.getY() == pawnPromotionY) {
+                        else if(selection.getX() == 5 && selection.getY() == pawnPromotionY){
                             board.getSquare(7, pawnPromotionY).setPiece(new Rook(PieceColor.WHITE));
-                            currentSquare.removePiece();
-                            currentColor = currentColor.toggle();
-                            boolean check = board.isCheck(currentColor);
-                            System.out.println(check);
-                            int totalMoves = board.generateValidMoves(currentColor);
-                            System.out.println(totalMoves);
-                            if(totalMoves == 0)
-                                determineResult(check);
-                            currentSquare = null;
-                            pawnPromotionMenu = false;
+                            nextTurn(board);
                         }
-                        else if (selection.getX() == 4 && selection.getY() == pawnPromotionY) {
+                        else if(selection.getX() == 4 && selection.getY() == pawnPromotionY){
                             board.getSquare(7, pawnPromotionY).setPiece(new Bishop(PieceColor.WHITE));
-                            currentSquare.removePiece();
-                            currentColor = currentColor.toggle();
-                            boolean check = board.isCheck(currentColor);
-                            System.out.println(check);
-                            int totalMoves = board.generateValidMoves(currentColor);
-                            System.out.println(totalMoves);
-                            if(totalMoves == 0)
-                                determineResult(check);
-                            currentSquare = null;
-                            pawnPromotionMenu = false;
+                            nextTurn(board);
                         }
                         else{
-                            boolean check = board.isCheck(currentColor);
-                            System.out.println(check);
-                            int totalMoves = board.generateValidMoves(currentColor);
-                            System.out.println(totalMoves);
-                            if(totalMoves == 0)
-                                determineResult(check);
-                            currentSquare = null;
-                            pawnPromotionMenu = false;
+                            resetTurn(board);
                         }
                     }
                     // Black pawn promotion
                     else{
-                        if (selection.getX() == 0 && selection.getY() == pawnPromotionY) {
+                        if(selection.getX() == 0 && selection.getY() == pawnPromotionY){
                             board.getSquare(0, pawnPromotionY).setPiece(new Queen(PieceColor.BLACK));
-                            currentSquare.removePiece();
-                            currentColor = currentColor.toggle();
-                            boolean check = board.isCheck(currentColor);
-                            System.out.println(check);
-                            int totalMoves = board.generateValidMoves(currentColor);
-                            System.out.println(totalMoves);
-                            if(totalMoves == 0)
-                                determineResult(check);
-                            currentSquare = null;
-                            pawnPromotionMenu = false;
+                            nextTurn(board);
                         }
-                        else if (selection.getX() == 1 && selection.getY() == pawnPromotionY) {
+                        else if(selection.getX() == 1 && selection.getY() == pawnPromotionY){
                             board.getSquare(0, pawnPromotionY).setPiece(new Knight(PieceColor.BLACK));
-                            currentSquare.removePiece();
-                            currentColor = currentColor.toggle();
-                            boolean check = board.isCheck(currentColor);
-                            System.out.println(check);
-                            int totalMoves = board.generateValidMoves(currentColor);
-                            System.out.println(totalMoves);
-                            if(totalMoves == 0)
-                                determineResult(check);
-                            currentSquare = null;
-                            pawnPromotionMenu = false;
+                            nextTurn(board);
                         }
-                        else if (selection.getX() == 2 && selection.getY() == pawnPromotionY) {
+                        else if(selection.getX() == 2 && selection.getY() == pawnPromotionY){
                             board.getSquare(0, pawnPromotionY).setPiece(new Rook(PieceColor.BLACK));
-                            currentSquare.removePiece();
-                            currentColor = currentColor.toggle();
-                            boolean check = board.isCheck(currentColor);
-                            System.out.println(check);
-                            int totalMoves = board.generateValidMoves(currentColor);
-                            System.out.println(totalMoves);
-                            if(totalMoves == 0)
-                                determineResult(check);
-                            currentSquare = null;
-                            pawnPromotionMenu = false;
+                            nextTurn(board);
                         }
-                        else if (selection.getX() == 3 && selection.getY() == pawnPromotionY) {
+                        else if(selection.getX() == 3 && selection.getY() == pawnPromotionY){
                             board.getSquare(0, pawnPromotionY).setPiece(new Bishop(PieceColor.BLACK));
-                            currentSquare.removePiece();
-                            currentColor = currentColor.toggle();
-                            boolean check = board.isCheck(currentColor);
-                            System.out.println(check);
-                            int totalMoves = board.generateValidMoves(currentColor);
-                            System.out.println(totalMoves);
-                            if(totalMoves == 0)
-                                determineResult(check);
-                            currentSquare = null;
-                            pawnPromotionMenu = false;
+                            nextTurn(board);
                         }
                         else{
-                            boolean check = board.isCheck(currentColor);
-                            System.out.println(check);
-                            int totalMoves = board.generateValidMoves(currentColor);
-                            System.out.println(totalMoves);
-                            if(totalMoves == 0)
-                                determineResult(check);
-                            currentSquare = null;
-                            pawnPromotionMenu = false;
+                            resetBoard(board);
                         }
                     }
                 }
@@ -342,84 +280,74 @@ public class Game {
                     int newX = (e.getY() / squareSize);
                     currentSquare.resetXScreen();
                     currentSquare.resetYScreen();
-                    if(board.inBounds((7 - newX), newY)) { // Check in bounds.
-                        if (currentSquare.getPiece().getPieceColor() == currentColor) { // Check if piece matches current player.
-                            if (((7 - newX) != currentSquare.getX()) || (newY != currentSquare.getY())) { // Ensures at least one coordinate is different to be a potential move.
-                                if (board.getSquare((7 - newX), newY).getPiece() == null || board.getSquare((7 - newX), newY).getPiece().getPieceColor() != currentColor) { // Checks if potential spot is either empty or contains enemy piece.
-                                    if(currentSquare.getPiece().validMove((7 - newX), newY)){ // Checks if move is a valid move.
-                                        // If current piece is king need to check if castling was executed.
-                                        if(currentSquare.getPiece() instanceof King){
-                                            if(newY - currentSquare.getY() == 2){
-                                                Piece temp = board.getSquare((7 - newX), currentSquare.getY() + 3).getPiece();
-                                                board.getSquare((7 - newX), currentSquare.getY() + 3).removePiece();
-                                                board.getSquare((7 - newX), currentSquare.getY() + 1).setPiece(temp);
-                                            }
-                                            if(newY - currentSquare.getY() == -2){
-                                                Piece temp = board.getSquare((7 - newX), currentSquare.getY() - 4).getPiece();
-                                                board.getSquare((7 - newX), currentSquare.getY() - 4).removePiece();
-                                                board.getSquare((7 - newX), currentSquare.getY() - 1).setPiece(temp);
-                                            }
-                                            board.updateKing(currentColor, (7 - newX), newY);
-                                        }
-                                        // If current piece is pawn needs to check for en passant and pawn promotion.
-                                        if(currentSquare.getPiece() instanceof Pawn){
-                                            if(currentSquare.getPiece().getPieceColor() == PieceColor.WHITE){
-                                                // Pawn promotion
-                                                if((7 - newX) == 7){
-                                                    pawnPromotionMenu = true;
-                                                    pawnPromotionY = newY;
-                                                }
-                                                // White enable en passant
-                                                if(currentSquare.getX() == 1 && (7 - newX) == 3){
-                                                    int leftY = currentSquare.getY() - 1;
-                                                    int rightY = currentSquare.getY() + 1;
-                                                    if(leftY >= 0 && board.getSquare((7 - newX), leftY).containsPiece() && board.getSquare((7 - newX), leftY).getPiece() instanceof Pawn && board.getSquare((7 - newX), leftY).getPiece().getPieceColor() == PieceColor.BLACK){
-                                                        ((Pawn) board.getSquare((7 - newX), leftY).getPiece()).enableEnPassantLeft();
-                                                    }
-                                                    if(rightY < 8 && board.getSquare((7 - newX), rightY).containsPiece() && board.getSquare((7 - newX), rightY).getPiece() instanceof Pawn && board.getSquare((7 - newX), rightY).getPiece().getPieceColor() == PieceColor.BLACK){
-                                                        ((Pawn) board.getSquare((7 - newX), rightY).getPiece()).enableEnPassantRight();
-                                                    }
-                                                }
-                                            }
-                                            else{
-                                                // Pawn promotion
-                                                if((7 - newX) == 0){
-                                                    pawnPromotionMenu = true;
-                                                    pawnPromotionY = newY;
-                                                }
-                                                // Black enable en passant
-                                                if(currentSquare.getX() == 6 && (7 - newX) == 4){
-                                                    int leftY = currentSquare.getY() - 1;
-                                                    int rightY = currentSquare.getY() + 1;
-                                                    if(leftY >= 0 && board.getSquare((7 - newX), leftY).containsPiece() && board.getSquare((7 - newX), leftY).getPiece() instanceof Pawn && board.getSquare((7 - newX), leftY).getPiece().getPieceColor() == PieceColor.WHITE){
-                                                        ((Pawn) board.getSquare((7 - newX), leftY).getPiece()).enableEnPassantRight();
-                                                    }
-                                                    if(rightY < 8 && board.getSquare((7 - newX), rightY).containsPiece() && board.getSquare((7 - newX), rightY).getPiece() instanceof Pawn && board.getSquare((7 - newX), rightY).getPiece().getPieceColor() == PieceColor.WHITE){
-                                                        ((Pawn) board.getSquare((7 - newX), rightY).getPiece()).enableEnPassantLeft();
-                                                    }
-                                                }
-                                            }
-                                            // Remove piece affected by en passant.
-                                            if(currentSquare.getY() != newY && !board.getSquare((7 - newX), newY).containsPiece()){
-                                                board.getSquare(currentSquare.getX(), newY).removePiece();
-                                            }
-                                        }
-                                        // Only update if pawn promotion not executed.
-                                        if(!pawnPromotionMenu) {
-                                            board.getSquare((7 - newX), newY).setPiece(currentSquare.getPiece());
-                                            currentSquare.removePiece();
-                                            currentColor = currentColor.toggle();
-                                            boolean check = board.isCheck(currentColor);
-                                            System.out.println(check);
-                                            int totalMoves = board.generateValidMoves(currentColor);
-                                            System.out.println(totalMoves);
-                                            if(totalMoves == 0)
-                                                determineResult(check);
-                                            currentSquare = null;
-                                        }
+                    // Check in bounds, check if piece matches current player, ensures at least one coordinate is different to be a potential move,
+                    // checks if potential spot is either empty or contains enemy piece, checks if move is a valid move.
+                    if(board.inBounds((7 - newX), newY) && currentSquare.getPiece().getPieceColor() == currentColor && (((7 - newX) != currentSquare.getX()) || (newY != currentSquare.getY())) &&
+                            (board.getSquare((7 - newX), newY).getPiece() == null || board.getSquare((7 - newX), newY).getPiece().getPieceColor() != currentColor) && currentSquare.getPiece().validMove((7 - newX), newY)){
+                        // If current piece is king need to check if castling was executed.
+                        if(currentSquare.getPiece() instanceof King){
+                            if(newY - currentSquare.getY() == 2){
+                                Piece temp = board.getSquare((7 - newX), currentSquare.getY() + 3).getPiece();
+                                board.getSquare((7 - newX), currentSquare.getY() + 3).removePiece();
+                                board.getSquare((7 - newX), currentSquare.getY() + 1).setPiece(temp);
+                            }
+                            if(newY - currentSquare.getY() == -2){
+                                Piece temp = board.getSquare((7 - newX), currentSquare.getY() - 4).getPiece();
+                                board.getSquare((7 - newX), currentSquare.getY() - 4).removePiece();
+                                board.getSquare((7 - newX), currentSquare.getY() - 1).setPiece(temp);
+                            }
+                            board.updateKing(currentColor, (7 - newX), newY);
+                        }
+
+                        // If current piece is pawn needs to check for en passant and pawn promotion.
+                        if(currentSquare.getPiece() instanceof Pawn){
+                            if(currentSquare.getPiece().getPieceColor() == PieceColor.WHITE){
+                                // Pawn promotion
+                                if((7 - newX) == 7){
+                                    pawnPromotionMenu = true;
+                                    pawnPromotionY = newY;
+                                }
+                                // White enable en passant
+                                if(currentSquare.getX() == 1 && (7 - newX) == 3){
+                                    int leftY = currentSquare.getY() - 1;
+                                    int rightY = currentSquare.getY() + 1;
+                                    if(leftY >= 0 && board.getSquare((7 - newX), leftY).containsPiece() && board.getSquare((7 - newX), leftY).getPiece() instanceof Pawn && board.getSquare((7 - newX), leftY).getPiece().getPieceColor() == PieceColor.BLACK){
+                                        ((Pawn) board.getSquare((7 - newX), leftY).getPiece()).enableEnPassantLeft();
+                                    }
+                                    if(rightY < 8 && board.getSquare((7 - newX), rightY).containsPiece() && board.getSquare((7 - newX), rightY).getPiece() instanceof Pawn && board.getSquare((7 - newX), rightY).getPiece().getPieceColor() == PieceColor.BLACK){
+                                        ((Pawn) board.getSquare((7 - newX), rightY).getPiece()).enableEnPassantRight();
                                     }
                                 }
                             }
+                            else{
+                                // Pawn promotion.
+                                if((7 - newX) == 0){
+                                    pawnPromotionMenu = true;
+                                    pawnPromotionY = newY;
+                                }
+                                // Black enable en passant.
+                                if(currentSquare.getX() == 6 && (7 - newX) == 4){
+                                    int leftY = currentSquare.getY() - 1;
+                                    int rightY = currentSquare.getY() + 1;
+                                    if(leftY >= 0 && board.getSquare((7 - newX), leftY).containsPiece() && board.getSquare((7 - newX), leftY).getPiece() instanceof Pawn && board.getSquare((7 - newX), leftY).getPiece().getPieceColor() == PieceColor.WHITE){
+                                        ((Pawn) board.getSquare((7 - newX), leftY).getPiece()).enableEnPassantRight();
+                                    }
+                                    if(rightY < 8 && board.getSquare((7 - newX), rightY).containsPiece() && board.getSquare((7 - newX), rightY).getPiece() instanceof Pawn && board.getSquare((7 - newX), rightY).getPiece().getPieceColor() == PieceColor.WHITE){
+                                        ((Pawn) board.getSquare((7 - newX), rightY).getPiece()).enableEnPassantLeft();
+                                    }
+                                }
+                            }
+
+                            // Remove piece affected by en passant.
+                            if(currentSquare.getY() != newY && !board.getSquare((7 - newX), newY).containsPiece()){
+                                board.getSquare(currentSquare.getX(), newY).removePiece();
+                            }
+                        }
+
+                        // Only update if pawn promotion not executed.
+                        if(!pawnPromotionMenu){
+                            board.getSquare((7 - newX), newY).setPiece(currentSquare.getPiece());
+                            nextTurn(board);
                         }
                     }
                 }
@@ -427,21 +355,23 @@ public class Game {
             }
 
             @Override
-            public void mouseEntered(MouseEvent e) {
+            public void mouseEntered(MouseEvent e){
                 // None
             }
 
             @Override
-            public void mouseExited(MouseEvent e) {
+            public void mouseExited(MouseEvent e){
                 // None
             }
         });
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
-    public static Square getPiece(int x,int y, Board board){
-        int xp=x/squareSize;
-        int yp=7-(y/squareSize);
+
+    // Returns the selected square if it contains a piece, otherwise returns null.
+    private static Square getPiece(int x, int y, Board board){
+        int xp = x/squareSize;
+        int yp = 7-(y/squareSize);
         if(board.getSquare(yp, xp).getPiece() == null)
             return null;
         else{
@@ -449,16 +379,18 @@ public class Game {
         }
     }
 
-    public static Square getSquare(int x,int y, Board board){
-        int xp=x/squareSize;
-        int yp=7-(y/squareSize);
+    // Returns the selected square regardless of whether it contains a piece.
+    private static Square getSquare(int x, int y, Board board){
+        int xp = x/squareSize;
+        int yp = 7-(y/squareSize);
         return board.getSquare(yp, xp);
     }
 
     // Use to display winner by checking current color.
     // public static boolean checkKing(PieceColor color, Board board)
 
-    public static void determineResult(boolean check){
+    // Determine whether game ends in a checkmate or stalemate.
+    private static void determineResult(boolean check){
         if(!check){
             stalemate = true;
             System.out.println("STALEMATE");
